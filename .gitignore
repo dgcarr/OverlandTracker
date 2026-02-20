@@ -1,0 +1,8 @@
+.gradle/
+local.properties
+**/build/
+.idea/
+*.iml
+
+# no-binary wrapper policy
+gradle/wrapper/gradle-wrapper.jar
