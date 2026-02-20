@@ -1,0 +1,38 @@
+name: Publish Gradle Wrapper JAR
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to create/update (for example gradle-wrapper-v8.7)
+        required: true
+      release_name:
+        description: Human-readable release name
+        required: false
+        default: Gradle Wrapper
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure wrapper JAR exists
+        run: |
+          test -f gradle/wrapper/gradle-wrapper.jar || {
+            echo "Missing gradle/wrapper/gradle-wrapper.jar in this commit." >&2
+            echo "Generate it locally with: gradle wrapper --gradle-version 8.7 --no-validate-url" >&2
+            exit 1
+          }
+
+      - name: Publish release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: ${{ github.event.inputs.release_name }}
+          files: gradle/wrapper/gradle-wrapper.jar
+          generate_release_notes: false

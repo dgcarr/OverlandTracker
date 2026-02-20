@@ -4,5 +4,5 @@ local.properties
 .idea/
 *.iml
 
-# no-binary wrapper policy
+# keep wrapper JAR out of git history; publish via release assets instead
 gradle/wrapper/gradle-wrapper.jar
