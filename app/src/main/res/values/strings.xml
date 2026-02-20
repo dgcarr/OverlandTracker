@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Overland Tracker</string>
-    <string name="tracking_notification_title">Tracking progress</string>
-    <string name="tracking_notification_body">GPS breadcrumb logging is active.</string>
-    <string name="tracking_notification_channel">Overland tracking</string>
+    <string name="thermal_info_content_description">Thermal information details</string>
+    <string name="thermal_tooltip">Phone thermal reading is device-based, not guaranteed ambient air temperature.</string>
 </resources>
