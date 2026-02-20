@@ -1,0 +1,46 @@
+{
+  "segments": [
+    {
+      "id": "overland-main",
+      "points": [
+        { "lat": -41.8425, "lng": 146.0608 },
+        { "lat": -41.8859, "lng": 146.0415 },
+        { "lat": -41.9239, "lng": 146.0788 },
+        { "lat": -41.9772, "lng": 146.1056 },
+        { "lat": -42.0417, "lng": 146.0672 }
+      ]
+    }
+  ],
+  "huts": [
+    {
+      "name": "Waterfall Valley Hut",
+      "lat": -41.8922,
+      "lng": 146.0459,
+      "orderIndex": 1,
+      "metadata": {
+        "day": "1",
+        "water": "Available"
+      }
+    },
+    {
+      "name": "Windermere Hut",
+      "lat": -41.9340,
+      "lng": 146.0818,
+      "orderIndex": 2,
+      "metadata": {
+        "day": "2",
+        "water": "Available"
+      }
+    },
+    {
+      "name": "Pelion Hut",
+      "lat": -42.0492,
+      "lng": 146.0638,
+      "orderIndex": 3,
+      "metadata": {
+        "day": "4",
+        "water": "Available"
+      }
+    }
+  ]
+}

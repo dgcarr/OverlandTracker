@@ -31,9 +31,7 @@ import com.overlandtracker.app.data.thermal.DeviceThermalState
 import com.overlandtracker.app.data.thermal.ThermalLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.views.CustomZoomButtonsController
+import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
@@ -47,9 +45,10 @@ fun MapScreen(
     val thermalState by mapViewModel.thermalState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        gpxDataState.value = withContext(Dispatchers.IO) {
-            runCatching { parseTrailGpx(context) }.getOrNull()
+        withContext(Dispatchers.IO) {
+            offlineMapRepository.prepareOfflineRegion()
         }
+        routeBundle = withContext(Dispatchers.IO) { hutRepository.loadRouteBundle() }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
