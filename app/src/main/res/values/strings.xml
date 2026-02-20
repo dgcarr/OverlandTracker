@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Overland Tracker</string>
+    <string name="thermal_info_content_description">Thermal information details</string>
+    <string name="thermal_tooltip">Phone thermal reading is device-based, not guaranteed ambient air temperature.</string>
 </resources>
