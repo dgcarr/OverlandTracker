@@ -94,13 +94,17 @@ If needed, start the app from Android Studio after install.
     .\gradlew.bat devices
     ```
 
-## Gradle wrapper policy
+## Non-binary policy (recommended GitHub approach)
 
-This repository follows a **no-binary policy**.
+This repository uses a **source-only on-branch** policy and treats release binaries separately.
 
-- `gradle/wrapper/gradle-wrapper.jar` is intentionally **not committed**.
-- `gradlew`, `gradlew.bat`, and `gradle/wrapper/gradle-wrapper.properties` are committed.
-- Prebuilt wrapper binaries are **not distributed by this repository**.
+**Chosen default:** use **GitHub Releases** for distribution, while keeping Git history binary-free.
+
+- Commit source, Gradle scripts, docs, and CI workflows.
+- Do **not** commit APK/AAB/signing files to Git history.
+- Publish APKs as **release assets** from CI on version tags.
+
+If your organization interprets policy as “no binaries anywhere on GitHub,” keep this repo source-only and distribute via Play Console/Firebase/another artifact repository instead.
 
 ### Install setup (what you need to do locally)
 
@@ -115,13 +119,11 @@ This recreates `gradle/wrapper/gradle-wrapper.jar` so `./gradlew` commands can r
 If your system uses `gradle8` or another command name, use that command instead.
 
 
-## Android app releases
+## CI and release flow
 
-This repository can publish an APK to GitHub Releases via
-`.github/workflows/android-release.yml`.
+Workflow: `.github/workflows/android-release.yml`
 
-- Trigger automatically when pushing a tag that starts with `v` (for example `v1.0.0`).
-- Or run manually from **Actions** and provide a `tag` value.
-- The workflow builds `app-release-unsigned.apk` and uploads it to the release.
+- On pull requests and pushes to `main`: runs `test`, `lint`, and `assembleDebug`.
+- On tags like `v1.0.0`: builds `app-release-unsigned.apk` and publishes it to GitHub Releases.
 
-> Note: the uploaded APK is unsigned. Sign the APK in a follow-up step if you need an installable production artifact.
+> Note: the uploaded APK is unsigned by default. For production delivery, sign inside CI using encrypted GitHub Secrets (never commit keystores).

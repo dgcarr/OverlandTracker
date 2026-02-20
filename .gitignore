@@ -1,8 +1,21 @@
+# Android/Gradle local and generated files
 .gradle/
 local.properties
 **/build/
 .idea/
 *.iml
 
-# keep wrapper JAR out of git history; publish via release assets instead
+# Build artifacts (no binaries in repo history)
+*.apk
+*.aab
+*.ap_
+*.jar
+*.war
+
+# Signing material / credentials
+*.jks
+*.keystore
+
+# Wrapper JAR is intentionally excluded by this repository policy
+# (developers regenerate it locally as documented in README)
 gradle/wrapper/gradle-wrapper.jar
