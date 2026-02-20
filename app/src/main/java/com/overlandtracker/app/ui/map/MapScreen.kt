@@ -7,7 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -20,13 +26,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.overlandtracker.app.R
 import com.overlandtracker.app.data.huts.HutRepository
 import com.overlandtracker.app.data.huts.HutWaypoint
-import com.overlandtracker.app.data.huts.LatLngPoint
 import com.overlandtracker.app.data.huts.RouteBundle
+import com.overlandtracker.app.data.thermal.DeviceThermalState
+import com.overlandtracker.app.data.thermal.ThermalLevel
 import com.overlandtracker.app.data.local.AppDatabase
 import com.overlandtracker.app.data.location.LocationRepository
 import com.overlandtracker.app.data.map.OfflineMapRepository
@@ -35,6 +45,7 @@ import com.overlandtracker.app.domain.navigation.TargetHutSelector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
@@ -54,6 +65,7 @@ fun MapScreen(
     var routeBundle by remember { mutableStateOf<RouteBundle?>(null) }
     var adaptivePingEnabled by remember { mutableStateOf(true) }
 
+    val thermalState by mapViewModel.thermalState.collectAsStateWithLifecycle()
     val currentPosition by locationRepository.observeCurrentPosition().collectAsStateWithLifecycle(initialValue = null)
     val breadcrumbs by locationRepository.observeBreadcrumbHistory().collectAsStateWithLifecycle(initialValue = emptyList())
 
@@ -140,41 +152,6 @@ fun MapScreen(
                 Text(text = "Next ping ETA: ${formatDuration(pingDecision.nextPingAtMillis - System.currentTimeMillis())}")
             }
         }
-    }
-}
-
-private fun formatDuration(durationMillis: Long): String {
-    val totalSeconds = (durationMillis / 1_000).coerceAtLeast(0)
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return "%02d:%02d".format(minutes, seconds)
-}
-
-                if (gpxData.routePoints.isNotEmpty()) {
-                    val route = Polyline(mapView).apply {
-                        setPoints(gpxData.routePoints)
-                        outlinePaint.color = Color.parseColor("#2E7D32")
-                        outlinePaint.strokeWidth = 7f
-                    }
-                    mapView.overlays.add(route)
-                    mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
-                    mapView.controller.setCenter(gpxData.routePoints.first())
-                    mapView.controller.setZoom(10.0)
-                }
-
-                gpxData.waypoints.forEach { waypoint ->
-                    mapView.overlays.add(
-                        Marker(mapView).apply {
-                            position = waypoint.location
-                            title = waypoint.name
-                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        }
-                    )
-                }
-
-                mapView.invalidate()
-            }
-        )
 
         ThermalIndicatorChip(
             state = thermalState,
@@ -183,6 +160,71 @@ private fun formatDuration(durationMillis: Long): String {
                 .padding(top = 16.dp, end = 16.dp)
         )
     }
+}
+
+private fun renderMapOverlays(
+    mapView: MapView,
+    routeBundle: RouteBundle?,
+    currentPosition: com.overlandtracker.app.data.huts.LatLngPoint?,
+    breadcrumbs: List<com.overlandtracker.app.data.huts.LatLngPoint>
+) {
+    mapView.overlays.clear()
+
+    val routePoints = routeBundle?.segments
+        ?.flatMap { segment -> segment.points.map { GeoPoint(it.lat, it.lng) } }
+        .orEmpty()
+
+    if (routePoints.isNotEmpty()) {
+        val route = Polyline(mapView).apply {
+            setPoints(routePoints)
+            outlinePaint.color = Color.parseColor("#2E7D32")
+            outlinePaint.strokeWidth = 7f
+        }
+        mapView.overlays.add(route)
+        mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+        mapView.controller.setCenter(routePoints.first())
+        mapView.controller.setZoom(10.0)
+    }
+
+    routeBundle?.huts.orEmpty().forEach { hut ->
+        mapView.overlays.add(
+            Marker(mapView).apply {
+                position = GeoPoint(hut.lat, hut.lng)
+                title = hut.name
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            }
+        )
+    }
+
+    breadcrumbs.takeLast(200).forEach { crumb ->
+        mapView.overlays.add(
+            Marker(mapView).apply {
+                position = GeoPoint(crumb.lat, crumb.lng)
+                title = "Breadcrumb"
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                alpha = 0.6f
+            }
+        )
+    }
+
+    currentPosition?.let { point ->
+        mapView.overlays.add(
+            Marker(mapView).apply {
+                position = GeoPoint(point.lat, point.lng)
+                title = "Current position"
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            }
+        )
+    }
+
+    mapView.invalidate()
+}
+
+private fun formatDuration(durationMillis: Long): String {
+    val totalSeconds = (durationMillis / 1_000).coerceAtLeast(0)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%02d:%02d".format(minutes, seconds)
 }
 
 @Composable
